@@ -169,7 +169,7 @@ export default function FooterChat(props) {
             onChange={handleChange}
             onKeyUp={submitComment}
             endAdornment={
-              <InputAdornment position="end">
+              <InputAdornment position="end" on>
                 <img
                   className={classes.iconAdorment}
                   onClick={submitComment}

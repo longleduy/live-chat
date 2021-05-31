@@ -145,10 +145,11 @@ const LiveSidebar = memo(({userId}) => {
                 )}
                 {!isShowSettingUsername && (
                     <div className={classes.footerChat}>
-                        <FooterChat 
+                        <FooterChat
+                            content={content}
                             username={username}
-                            onChange={handleChange}
-                            onKeyUp={submitComment}
+                            handleChange={handleChange}
+                            submitComment={submitComment}
                             handleShowSettingUsername={handleShowSettingUsername} 
                         />
                     </div>
