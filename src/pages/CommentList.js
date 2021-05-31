@@ -1,101 +1,102 @@
 import '../App.css';
-import React, {Fragment, memo, useEffect} from 'react';
+import React, {Fragment, memo, useEffect, useRef} from 'react';
 import {makeStyles} from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
-import TextField from "@material-ui/core/TextField";
 import CommentItem from "./CommentItem";
-import {Loading} from './Loading';
-import {GET_COMMENT_BY_POST_ID, CREATE_COMMENT, SUB_CREATE_COMMENT} from '../commons/graphql/schema';
-import {useQuery, useMutation} from "@apollo/react-hooks";
+import IconButton from '@material-ui/core/IconButton';
+import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 
 const useStyles = makeStyles((theme) => ({
-    commentDiv: {
-        marginTop: '15px',
-        marginBottom: '30px',
-        flexBasis: 0
+    commentList: {
+        padding: "0 12px",
+        paddingTop: '12px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'auto',
+        paddingBottom: theme.spacing(5),
+        position: "absolute",
+        top: 0,
+        bottom: 0,
+        overflowY: "scroll",
     },
-    commentInput: {
-        width: '100%',
-        '& label': {
-            fontSize: '12px'
-        }
-    }
+    scrollButton: {
+        backgroundColor: "#E60012",
+        opacity: '80%',
+        position: 'absolute',
+        zIndex: 9999,
+        bottom: '120px',
+        left: 'calc(50% - 12px)',
+        visibility: 'collapse'
+    },
+    commentNotifyCommon: {
+        backgroundColor: "#F1F1F1",
+        padding: 9,
+        display: "flex",
+      },
+      iconNotifyCommon: {
+        marginRight: 9,
+      },
+      textNotifyCommon: {
+        fontSize: "0.75rem",
+        lineHeight: 1.25,
+        color: "#999999",
+      },
 }));
-const CommentList = memo(({userId}) => {
+
+const CommentList = memo((props) => {
+    const myRef = useRef(null);
+    const scrollButtonRef = useRef(null);
     console.log('CommentList');
-    const { loading, error, data, subscribeToMore } = useQuery(GET_COMMENT_BY_POST_ID);
-    const [
-        createComment,
-        { loading: mutationLoading, error: mutationError },
-    ] = useMutation(CREATE_COMMENT, {
-        update(cache, { data: { createComment } }) {
-            const {getCommentsByLiveID} = cache.readQuery({query: GET_COMMENT_BY_POST_ID});
-            const exists = getCommentsByLiveID.find(
-                ({ comment_id }) => comment_id === createComment.comment_id
-            );
-            createComment['mutation'] = true;
-            if(!exists) return cache.writeQuery({query: GET_COMMENT_BY_POST_ID, data: {
-                    getCommentsByLiveID: [
-                        ...getCommentsByLiveID,
-                        createComment
-                    ]
-                }})
-        }
-    });
-    const classes = useStyles();
-    const [content, setContent] = React.useState('');
-    const handleChange = (event) => {
-        setContent(event.target.value);
-    };
-    const submitComment = async (e) => {
-        if (e.keyCode === 13 && !e.shiftKey) {
-            const variables = {
-                live_id: 1,
-                user_id: userId,
-                content
-            };
-            createComment({
-                variables
-            }).then();
-            setContent('')
-        }
-    };
     useEffect(() => {
-        console.log("SUB")
-        subscribeToMore({
-            document: SUB_CREATE_COMMENT,
-            variables: { live_id: 1 },
-            updateQuery: (prev, { subscriptionData }) => {
-                console.log("updateQuery")
-                if (!subscriptionData.data) return prev;
-                const subscribeToNewComments = subscriptionData.data.subscribeToNewComments;
-                const exists = prev.getCommentsByLiveID.find(
-                    ({ comment_id }) => comment_id === subscribeToNewComments.comment_id
-                );
-                if (exists) return prev;
-                return Object.assign({}, prev, {
-                    getCommentsByLiveID: [...prev.getCommentsByLiveID, subscribeToNewComments]
-                });
+        if(props.data && props.data.getCommentsByLiveID && props.data.getCommentsByLiveID.length > 0){
+            const lastComment = props.data.getCommentsByLiveID[props.data.getCommentsByLiveID.length - 1];
+            const  d = myRef.current;
+            if (d.scrollTop + d.clientHeight >= d.scrollHeight - 100 || lastComment.user_info.user_id === props.userId) {
+                myRef.current.scrollTop = myRef.current.scrollHeight;
             }
-        })
-    }, [])
+            else{
+                scrollButtonRef.current.style.visibility = 'visible';
+            }
+        }
+    },[props.data]);
+    const scrollBottom = () => {
+        myRef.current.scrollTop = myRef.current.scrollHeight;
+        scrollButtonRef.current.style.visibility = 'collapse';
+    }
+    const {getCommentsByLiveID} = props.data;
+    const classes = useStyles();
     return (
         <Fragment>
-            {loading ? <Loading/> :
-            <CommentItem data={data} userId={userId}/>}
-            <Grid item xs={12} className={classes.commentDiv}>
-                <TextField
-                    className={classes.commentInput}
-                    id="standard-multiline-flexible"
-                    label="コメントを書く..."
-                    rowsMax={4}
-                    value={content}
-                    onChange={handleChange}
-                    onKeyUp={submitComment}
-                />
+            <Grid item xs={12} className={classes.commentList} ref={myRef}>
+                <IconButton
+                    ref={scrollButtonRef}
+                    aria-label="Scroll Bottom"
+                    className={classes.scrollButton}
+                    size={'small'}
+                    onClick={scrollBottom}
+                >
+                    <ArrowDownwardIcon style={{color: 'white'}}/>
+                </IconButton>
+                {
+                    getCommentsByLiveID.map((d, idx) => {
+                        return <CommentItem key={d.comment_id} data={d}/>
+                    })
+                }
+                <div className={classes.commentNotifyCommon}>
+                    <div className={classes.iconNotifyCommon}>
+                        <img
+                            src={"/iconTVComment.png"}
+                            alt="icon-TV-Comment"
+                        />
+                    </div>
+                    <div className={classes.textNotifyCommon}>
+                        このセクションにはチャット機能についての説明が入ります。このセクションにはチャット機能についての説明が入ります。
+                        <span style={{ color: "#A42227" }}>詳細</span>
+                    </div>
+                </div>
+
             </Grid>
         </Fragment>
     );
-})
-
+});
 export default CommentList;

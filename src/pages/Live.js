@@ -1,8 +1,8 @@
 import '../App.css';
-import React, {Fragment, memo} from 'react';
+import React, {Fragment} from 'react';
 import {makeStyles} from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
-import CommentList from "./CommentList";
+import LiveSidebar from "./LiveSidebar";
 import {ApolloProvider, InMemoryCache} from '@apollo/react-hooks';
 import {ApolloLink} from 'apollo-link';
 import {createAuthLink} from 'aws-appsync-auth-link';
@@ -33,7 +33,7 @@ const client = new ApolloClient({
 });
 const WithProvider = ({userId}) => (
     <ApolloProvider client={client}>
-        <CommentList userId={userId}/>
+        <LiveSidebar userId={userId}/>
     </ApolloProvider>
 );
 
@@ -41,11 +41,12 @@ const useStyles = makeStyles((theme) => ({
     root: {
         flexGrow: 1,
         background: 'rgb(238, 238, 238)',
-        minHeight: '100vh'
+        minHeight: '100vh',
     },
     liveDiv: {
-        maxWidth: '80%',
-        margin: 'auto'
+        maxWidth: '1300px',
+        padding: '0 40px',
+        margin: '0 auto'
     },
     liveContentMain: {
         display: 'flex',
@@ -73,11 +74,10 @@ const useStyles = makeStyles((theme) => ({
     commentMainDiv: {
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'white',
         margin: '12px 0px',
         borderRadius: '3px',
         maxHeight: '100vh',
-        position: 'relative'
+        position: 'relative',
     }
 }));
 
@@ -91,7 +91,11 @@ const Live = ((props) => {
                 <Grid container spacing={3} className={classes.liveDiv}>
                     <Grid item xs={8} className={classes.liveContentMain}>
                         <div>
-                            <img src={'/thumb_live_livenms_online.png'} className={classes.liveThumbnail}/>
+                            <img
+                                alt="thumb_video_live"
+                                src={'/thumb_live_livenms_online.png'} 
+                                className={classes.liveThumbnail}
+                            />
                         </div>
                         <div className={classes.liveContent}>
                             <label className={classes.liveTitle}>
@@ -108,7 +112,7 @@ const Live = ((props) => {
                             </div>
                         </div>
                     </Grid>
-                    <Grid item xs={4} className={classes.commentMainDiv}>
+                    <Grid item xs={3} className={classes.commentMainDiv}>
                         <WithProvider userId={userId}/>
                     </Grid>
                 </Grid>
