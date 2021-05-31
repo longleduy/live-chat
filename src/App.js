@@ -1,25 +1,25 @@
-import logo from './logo.svg';
-import './App.css';
+import React, {Fragment} from 'react';
+import gql from 'graphql-tag';
+import { useQuery } from '@apollo/react-hooks';
 
+const GET_ALL_USER = gql`
+    query MyQuery {
+      allUser {
+        id
+        cognitoId
+        username
+      }
+    }
+`
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const { loading, error, data } = useQuery(GET_ALL_USER);
+    if (loading) return null;
+    if (error) return `Error! ${error}`;
+    return (
+        <Fragment>
+            <p>{JSON.stringify(data)}</p>
+        </Fragment>
+    );
 }
 
 export default App;
