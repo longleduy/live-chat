@@ -47,18 +47,20 @@ const CommentList = memo((props) => {
     const myRef = useRef(null);
     const scrollButtonRef = useRef(null);
     console.log('CommentList');
+
     useEffect(() => {
         if(props.data && props.data.getCommentsByLiveID && props.data.getCommentsByLiveID.length > 0){
             const lastComment = props.data.getCommentsByLiveID[props.data.getCommentsByLiveID.length - 1];
             const  d = myRef.current;
-            if (d.scrollTop + d.clientHeight >= d.scrollHeight - 100 || lastComment.user_info.user_id === props.userId) {
-                myRef.current.scrollTop = myRef.current.scrollHeight;
-            }
-            else{
-                scrollButtonRef.current.style.visibility = 'visible';
-            }
+            // if (d.scrollTop + d.clientHeight >= d.scrollHeight - 100 || lastComment.user_info.user_id === props.userId) {
+            //     myRef.current.scrollTop = myRef.current.scrollHeight;
+            // }
+            // else{
+            //     scrollButtonRef.current.style.visibility = 'visible';
+            // }
         }
     },[props.data]);
+
     const scrollBottom = () => {
         myRef.current.scrollTop = myRef.current.scrollHeight;
         scrollButtonRef.current.style.visibility = 'collapse';

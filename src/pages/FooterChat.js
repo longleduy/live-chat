@@ -78,9 +78,10 @@ const useStyles = makeStyles(() => {
 
 export default function FooterChat(props) {
   const classes = useStyles();
-  const { handleShowSettingUsername, username, content, handleChange, submitComment } = props;
+  const { handleShowSettingUsername, submitComment, username } = props;
   const [isShowRemind, setIsShowRemind] = useState(false);
- 
+  const [content, setContent] = React.useState('');
+
   const handleHoverSectionDefault = () => {
     setIsShowRemind(true);
   };
@@ -88,6 +89,19 @@ export default function FooterChat(props) {
   const handleLeaveSectionDefault = () => {
     setIsShowRemind(false);
   };
+
+  const handleChange = (event) => {
+    setContent(event.target.value);
+    console.log(event.target.value);
+  };
+
+  const handleSubmitComment =  async (e) => {
+    if (e.keyCode === 13 && !e.shiftKey) {
+      submitComment(content);
+      setContent("");
+    }
+  }
+
 
   return (
     <div className={classes.containerFooterChat}>
@@ -167,12 +181,12 @@ export default function FooterChat(props) {
             id="standard-adornment-weight"
             value={content}
             onChange={handleChange}
-            onKeyUp={submitComment}
+            onKeyUp={handleSubmitComment}
             endAdornment={
               <InputAdornment position="end" on>
                 <img
                   className={classes.iconAdorment}
-                  onClick={submitComment}
+                  onClick={handleSubmitComment}
                   src={"/iconSend.png"}
                   alt="icon-Send-Comment"
                 />

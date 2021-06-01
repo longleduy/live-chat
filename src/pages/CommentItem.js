@@ -43,7 +43,7 @@ const CommentItem = memo((props) => {
     console.log('CommentItem');
     const {data} = props;
     const userInfo = data.user_info || {
-        "user_id": "1",
+        "user_id": "79ed6722-c780-42ff-8e5f-43a7a06e6cd4",
         "user_name": "User",
         "avatar_color": "orange"
     }
