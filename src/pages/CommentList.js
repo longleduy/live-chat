@@ -47,9 +47,10 @@ const CommentList = memo((props) => {
     const myRef = useRef(null);
     const scrollButtonRef = useRef(null);
     console.log('CommentList');
+    const comments = [...props.data.getCommentsByLiveID.comments].reverse();
     useEffect(() => {
-        if(props.data && props.data.getCommentsByLiveID && props.data.getCommentsByLiveID.length > 0){
-            const lastComment = props.data.getCommentsByLiveID[props.data.getCommentsByLiveID.length - 1];
+        if(props.data && comments && comments.length > 0){
+            const lastComment = comments[comments.length - 1];
             const  d = myRef.current;
             if (d.scrollTop + d.clientHeight >= d.scrollHeight - 100 || lastComment.user_info.user_id === props.userId) {
                 myRef.current.scrollTop = myRef.current.scrollHeight;
@@ -63,7 +64,7 @@ const CommentList = memo((props) => {
         myRef.current.scrollTop = myRef.current.scrollHeight;
         scrollButtonRef.current.style.visibility = 'collapse';
     }
-    const {getCommentsByLiveID} = props.data;
+    //const {getCommentsByLiveID} = props.data;
     const classes = useStyles();
     return (
         <Fragment>
@@ -78,7 +79,7 @@ const CommentList = memo((props) => {
                     <ArrowDownwardIcon style={{color: 'white'}}/>
                 </IconButton>
                 {
-                    getCommentsByLiveID.map((d, idx) => {
+                    comments.map((d, idx) => {
                         return <CommentItem key={d.comment_id} data={d}/>
                     })
                 }

@@ -7,6 +7,7 @@ import FooterChat from "./FooterChat";
 import {Loading} from './Loading';
 import {GET_COMMENT_BY_POST_ID, CREATE_COMMENT, SUB_CREATE_COMMENT} from '../commons/graphql/schema';
 import {useQuery, useMutation} from "@apollo/react-hooks";
+import {Button} from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
     containerSidebar: {
@@ -50,7 +51,12 @@ const useStyles = makeStyles((theme) => ({
 
 const LiveSidebar = memo(({userId}) => {
     console.log('LiveSidebar');
-    const { loading, error, data, subscribeToMore } = useQuery(GET_COMMENT_BY_POST_ID);
+    const { loading, refetch, data, subscribeToMore, fetchMore } = useQuery(GET_COMMENT_BY_POST_ID,{
+        variables: {
+            live_episode_id: 16112,
+            limit: 5
+        }
+    });
     const [
         createComment,
         { loading: mutationLoading, error: mutationError },
@@ -117,18 +123,22 @@ const LiveSidebar = memo(({userId}) => {
         console.log("SUB")
         subscribeToMore({
             document: SUB_CREATE_COMMENT,
-            variables: { live_id: 1 },
+            variables: { live_episode_id: 16112 },
             updateQuery: (prev, { subscriptionData }) => {
                 console.log("updateQuery")
                 if (!subscriptionData.data) return prev;
                 const subscribeToNewComments = subscriptionData.data.subscribeToNewComments;
-                const exists = prev.getCommentsByLiveID.find(
+                const exists = prev.getCommentsByLiveID.comments.find(
                     ({ comment_id }) => comment_id === subscribeToNewComments.comment_id
                 );
                 if (exists) return prev;
-                return Object.assign({}, prev, {
-                    getCommentsByLiveID: [...prev.getCommentsByLiveID, subscribeToNewComments]
+                const data = Object.assign({}, prev, {
+                    getCommentsByLiveID:{
+                        ...prev.getCommentsByLiveID,
+                        comments: [subscribeToNewComments,...prev.getCommentsByLiveID.comments ]
+                    }
                 });
+                return data;
             }
         })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -163,6 +173,30 @@ const LiveSidebar = memo(({userId}) => {
                         />
                     </div>
                 )}
+                <Button value={'FetchMore'} onClick={() => {
+                    if (data.getCommentsByLiveID.nextToken){
+                       return fetchMore({
+                            variables: {
+                                nextToken: data.getCommentsByLiveID.nextToken
+                            },
+                            updateQuery: (previousResult, {fetchMoreResult,variables}) => {
+                                console.log("FetchMoreUpdateQuery");
+                                console.log("currentToken",variables.nextToken);
+                                if (!fetchMoreResult || !fetchMoreResult.getCommentsByLiveID || !fetchMoreResult.getCommentsByLiveID.comments.length ===0) return previousResult;
+                                const {comments, nextToken} = fetchMoreResult.getCommentsByLiveID;
+                                console.log("nextToken",nextToken);
+                                const data = Object.assign({}, previousResult, {
+                                    getCommentsByLiveID:{
+                                        ...previousResult.getCommentsByLiveID,
+                                        comments: [...previousResult.getCommentsByLiveID.comments,...comments],
+                                        nextToken
+                                    }
+                                });
+                                return data;
+                            }
+                        })
+                    }
+                }}/>
             </div>
         </Fragment>
     );
