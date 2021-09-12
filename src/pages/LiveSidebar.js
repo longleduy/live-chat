@@ -1,6 +1,7 @@
 import '../App.css';
 import React, {Fragment, memo, useEffect} from 'react';
 import {makeStyles} from '@material-ui/core/styles';
+import axios from 'axios';
 import CommentList from "./CommentList";
 import SettingUsername from "./SettingUsername";
 import FooterChat from "./FooterChat";
@@ -76,7 +77,6 @@ const LiveSidebar = memo(({userId}) => {
         }
     });
     const classes = useStyles();
-    const [content, setContent] = React.useState('');
     const [isShowSettingUsername, setIsShowSettingUsername] = React.useState(false);
     const [username, setUsername] =  React.useState("");
 
@@ -88,9 +88,14 @@ const LiveSidebar = memo(({userId}) => {
         setIsShowSettingUsername(false);
     }
 
-    const submitUsername = (username) => {
+    const submitUsername = async (username) => {
         if (username) {
-            // Send username server ...
+            axios.post(`https://ncnokoaqk0.execute-api.ap-northeast-1.amazonaws.com/dev/auth/live-chat-user`, { user_name: username })
+            .then(res => {
+                console.log(res.data.data);
+                localStorage.setItem("user", JSON.stringify(res.data.data));
+            })
+            
             setUsername(username);
             handleCloseSettingUsername();
         }
@@ -100,23 +105,15 @@ const LiveSidebar = memo(({userId}) => {
         handleCloseSettingUsername();
     }
 
-    const handleChange = (event) => {
-        setContent(event.target.value);
-        console.log(event.target.value);
-    };
-
-    const submitComment = async (e) => {
-        if (e.keyCode === 13 && !e.shiftKey) {
-            const variables = {
-                live_id: 1,
-                user_id: userId,
-                content
-            };
-            createComment({
-                variables
-            }).then();
-            setContent('')
-        }
+    const submitComment = async (content) => {
+        const variables = {
+            live_id: 1,
+            user_id: userId,
+            content: content
+        };
+        createComment({
+            variables
+        }).then();
     };
 
     useEffect(() => {
@@ -143,6 +140,7 @@ const LiveSidebar = memo(({userId}) => {
         })
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+    
     return (
         <Fragment>
             <div className={classes.containerSidebar}>
@@ -155,10 +153,8 @@ const LiveSidebar = memo(({userId}) => {
                 )}
                 {!isShowSettingUsername && (
                     <div className={classes.footerChat}>
-                        <FooterChat
-                            content={content}
+                        <FooterChat 
                             username={username}
-                            handleChange={handleChange}
                             submitComment={submitComment}
                             handleShowSettingUsername={handleShowSettingUsername} 
                         />

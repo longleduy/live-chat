@@ -52,14 +52,15 @@ const CommentList = memo((props) => {
         if(props.data && comments && comments.length > 0){
             const lastComment = comments[comments.length - 1];
             const  d = myRef.current;
-            if (d.scrollTop + d.clientHeight >= d.scrollHeight - 100 || lastComment.user_info.user_id === props.userId) {
-                myRef.current.scrollTop = myRef.current.scrollHeight;
-            }
-            else{
-                scrollButtonRef.current.style.visibility = 'visible';
-            }
+            // if (d.scrollTop + d.clientHeight >= d.scrollHeight - 100 || lastComment.user_info.user_id === props.userId) {
+            //     myRef.current.scrollTop = myRef.current.scrollHeight;
+            // }
+            // else{
+            //     scrollButtonRef.current.style.visibility = 'visible';
+            // }
         }
     },[props.data]);
+
     const scrollBottom = () => {
         myRef.current.scrollTop = myRef.current.scrollHeight;
         scrollButtonRef.current.style.visibility = 'collapse';
