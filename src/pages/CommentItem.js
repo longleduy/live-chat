@@ -1,68 +1,63 @@
 import '../App.css';
-import React, {Fragment, memo, useEffect, useRef} from 'react';
+import React, {Fragment, memo} from 'react';
 import {makeStyles} from '@material-ui/core/styles';
-import Grid from '@material-ui/core/Grid';
-import ItemChild from "./ItemChild";
-import IconButton from '@material-ui/core/IconButton';
-import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 
 const useStyles = makeStyles((theme) => ({
-    commentList: {
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'auto',
-    },
-    scrollButton: {
-        backgroundColor: "#E60012",
-        opacity: '80%',
-        position: 'absolute',
-        zIndex: 9999,
-        bottom: '120px',
-        left: 'calc(50% - 12px)',
-        visibility: 'collapse'
-    }
+    containerComment: {
+        marginBottom: theme.spacing(2),
+      },
+      usernameAndTime: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+      },
+      username: {
+        fontSize: "0.8125rem",
+        lineHeight: 1.25,
+        fontWeight: "bold",
+        color: "#333333",
+      },
+      time: {
+        fontFamily: "Hiragino Sans",
+        fontSize: "0.8125rem",
+        lineHeight: 1.25,
+        color: "#999999",
+      },
+      content: {
+        fontSize: "0.8125rem",
+        color: "#333333",
+      },
 }));
 
+const convertToTime = (datetime) => {
+  const fullDateTimeComment = new Date(Number(datetime));
+  const hours = fullDateTimeComment.getHours();
+  const minutes = fullDateTimeComment.getMinutes();
+  const hoursStr = hours.toLocaleString().length === 1 ? `0${hours}` : `${hours}`;
+  const minutesStr = minutes.toLocaleString().length === 1 ? `0${minutes}` : `${minutes}`;
+
+  return `${hoursStr}:${minutesStr}`;
+}
+
 const CommentItem = memo((props) => {
-    const myRef = useRef(null);
-    const scrollButtonRef = useRef(null);
     console.log('CommentItem');
-    useEffect(() => {
-        if(props.data && props.data.getCommentsByLiveID && props.data.getCommentsByLiveID.length > 0){
-            const lastComment = props.data.getCommentsByLiveID[props.data.getCommentsByLiveID.length - 1];
-            const  d = myRef.current;
-            if (d.scrollTop + d.clientHeight >= d.scrollHeight - 100 || lastComment.user_info.user_id === props.userId) {
-                myRef.current.scrollTop = myRef.current.scrollHeight;
-            }
-            else{
-                scrollButtonRef.current.style.visibility = 'visible';
-            }
-        }
-    },[props.data]);
-    const scrollBottom = () => {
-        myRef.current.scrollTop = myRef.current.scrollHeight;
-        scrollButtonRef.current.style.visibility = 'collapse';
+    const {data} = props;
+    const userInfo = data.user_info || {
+        "user_id": "79ed6722-c780-42ff-8e5f-43a7a06e6cd4",
+        "user_name": "User",
+        "avatar_color": "orange"
     }
-    const {getCommentsByLiveID} = props.data;
     const classes = useStyles();
+
     return (
         <Fragment>
-            <Grid item xs={12} className={classes.commentList} ref={myRef}>
-                    <IconButton
-                        ref={scrollButtonRef}
-                        aria-label="Scroll Bottom"
-                        className={classes.scrollButton}
-                        size={'small'}
-                        onClick={scrollBottom}
-                    >
-                        <ArrowDownwardIcon style={{color: 'white'}}/>
-                    </IconButton>
-                {
-                    getCommentsByLiveID.map((d, idx) => {
-                        return <ItemChild key={d.comment_id} data={d}/>
-                    })
-                }
-            </Grid>
+            <div className={classes.containerComment}>
+                <div className={classes.usernameAndTime}>
+                    <div className={classes.username}>{userInfo.user_name}</div>
+                    <div className={classes.time}>{convertToTime(data.create_at)}</div>
+                </div>
+                <div className={classes.content}>{data.content}</div>
+            </div>
         </Fragment>
     );
 });
