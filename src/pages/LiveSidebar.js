@@ -6,9 +6,10 @@ import CommentList from "./CommentList";
 import SettingUsername from "./SettingUsername";
 import FooterChat from "./FooterChat";
 import {Loading} from './Loading';
-import {GET_COMMENT_BY_POST_ID, CREATE_COMMENT, SUB_CREATE_COMMENT} from '../commons/graphql/schema';
-import {useQuery, useMutation} from "@apollo/react-hooks";
+import {GET_COMMENT_BY_POST_ID, CREATE_COMMENT, SUB_CREATE_COMMENT, SUB_ADMIN_ACTION} from '../commons/graphql/schema';
+import {useQuery, useMutation, useSubscription, useLazyQuery} from "@apollo/client";
 import {Button} from "@material-ui/core";
+import Subcription from "./Subcription";
 
 const useStyles = makeStyles((theme) => ({
     containerSidebar: {
@@ -49,36 +50,44 @@ const useStyles = makeStyles((theme) => ({
         backgroundColor: theme.customColor?.WHITE,
     },
 }));
-
 const LiveSidebar = memo(({userId}) => {
     console.log('LiveSidebar');
-    const { loading, refetch, data, subscribeToMore, fetchMore } = useQuery(GET_COMMENT_BY_POST_ID,{
-        variables: {
-            live_episode_id: 16112,
-            limit: 5
-        }
+    const variables = {
+        live_episode_id: 16112,
+        limit: 10
+    }
+    const {loading, refetch, data, subscribeToMore, fetchMore, networkStatus} = useQuery(GET_COMMENT_BY_POST_ID, {
+        variables
     });
-    const [
-        createComment,
-        { loading: mutationLoading, error: mutationError },
-    ] = useMutation(CREATE_COMMENT, {
-        update(cache, { data: { createComment } }) {
-            const {getCommentsByLiveID} = cache.readQuery({query: GET_COMMENT_BY_POST_ID});
-            const exists = getCommentsByLiveID.find(
-                ({ comment_id }) => comment_id === createComment.comment_id
-            );
-            createComment['mutation'] = true;
-            if(!exists) return cache.writeQuery({query: GET_COMMENT_BY_POST_ID, data: {
-                    getCommentsByLiveID: [
-                        ...getCommentsByLiveID,
-                        createComment
-                    ]
-                }})
+    useSubscription(
+        SUB_ADMIN_ACTION,
+        {
+            variables,
+            onSubscriptionData: async ({client, subscriptionData}) => {
+                if (subscriptionData.data && subscriptionData.data.subscribeToAdminAction && subscriptionData.data.subscribeToAdminAction.mode === "REFETCH") {
+                    const subDataCommentTime = Number(subscriptionData.data.subscribeToAdminAction.comment.create_at);
+                    const res = client.readQuery({
+                        query: GET_COMMENT_BY_POST_ID,
+                        variables
+                    });
+                    const currentList = res.getCommentsByLiveID.comments;
+                    variables.limit = currentList.length;
+                    let lasteCurrentCommentTime = 0;
+                    if (currentList.length > 0) {
+                        lasteCurrentCommentTime = Number(currentList[currentList.length - 1].create_at)
+                    }
+                    if (subDataCommentTime >= lasteCurrentCommentTime || lasteCurrentCommentTime === 0) {
+                      console.log("Refetch");
+                      return refetch();
+                    }
+                }
+            }
         }
-    });
+    );
+    console.log("networkStatus", networkStatus)
     const classes = useStyles();
     const [isShowSettingUsername, setIsShowSettingUsername] = React.useState(false);
-    const [username, setUsername] =  React.useState("");
+    const [username, setUsername] = React.useState("");
 
     const handleShowSettingUsername = () => {
         setIsShowSettingUsername(true);
@@ -90,73 +99,84 @@ const LiveSidebar = memo(({userId}) => {
 
     const submitUsername = async (username) => {
         if (username) {
-            axios.post(`https://ncnokoaqk0.execute-api.ap-northeast-1.amazonaws.com/dev/auth/live-chat-user`, { user_name: username })
-            .then(res => {
-                console.log(res.data.data);
-                localStorage.setItem("user", JSON.stringify(res.data.data));
-            })
-            
+            axios.post(`https://ncnokoaqk0.execute-api.ap-northeast-1.amazonaws.com/dev/auth/live-chat-user`, {user_name: username})
+                .then(res => {
+                    console.log(res.data.data);
+                    localStorage.setItem("user", JSON.stringify(res.data.data));
+                })
+
             setUsername(username);
             handleCloseSettingUsername();
         }
     }
-    
+
     const cancelSettingUsername = () => {
         handleCloseSettingUsername();
     }
 
     const submitComment = async (content) => {
-        const variables = {
-            live_id: 1,
-            user_id: userId,
-            content: content
-        };
-        createComment({
-            variables
-        }).then();
+        await axios.post(
+            'http://localhost:8081/chat/comment',
+            {
+                "live_episode_id": 16112,
+                "live_program_id": 161,
+                "content": content,
+                "pin_comment_flg": 0
+            },
+            {
+                headers: {
+                    'user-token': '500a5a01-0d42-49fb-8197-2a788a4d585d'
+                }
+            }
+        )
+        // const variables = {
+        //     live_id: 1,
+        //     user_id: userId,
+        //     content: content
+        // };
+        // createComment({
+        //     variables
+        // }).then();
     };
 
     useEffect(() => {
         console.log("SUB")
         subscribeToMore({
             document: SUB_CREATE_COMMENT,
-            variables: { live_episode_id: 16112 },
-            updateQuery: (prev, { subscriptionData }) => {
+            variables: {live_episode_id: 16112},
+            updateQuery: (prev, {subscriptionData}) => {
                 console.log("updateQuery")
                 if (!subscriptionData.data) return prev;
                 const subscribeToNewComments = subscriptionData.data.subscribeToNewComments;
-                const exists = prev.getCommentsByLiveID.comments.find(
-                    ({ comment_id }) => comment_id === subscribeToNewComments.comment_id
-                );
-                if (exists) return prev;
                 const data = Object.assign({}, prev, {
-                    getCommentsByLiveID:{
+                    getCommentsByLiveID: {
                         ...prev.getCommentsByLiveID,
-                        comments: [subscribeToNewComments,...prev.getCommentsByLiveID.comments ]
+                        comments: [subscribeToNewComments, ...prev.getCommentsByLiveID.comments]
                     }
                 });
                 return data;
             }
-        })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
-    
+    //if(!called) return <Button onClick={() => lzLoad({variables:{live_episode_id: 16112}})}>Refetch</Button>
     return (
         <Fragment>
             <div className={classes.containerSidebar}>
+                {/*<Subcription refetch={...refetch()}/>*/}
                 <div className={classes.title}>チャット</div>
                 {!isShowSettingUsername && (
                     <div className={classes.contentComment}>
-                        {loading ? <Loading/> :
-                        <CommentList data={data} userId={userId}/>}
+                        {networkStatus === 1 ? <Loading/> :
+                            <CommentList data={data} userId={userId}/>}
                     </div>
                 )}
                 {!isShowSettingUsername && (
                     <div className={classes.footerChat}>
-                        <FooterChat 
+                        <FooterChat
                             username={username}
                             submitComment={submitComment}
-                            handleShowSettingUsername={handleShowSettingUsername} 
+                            handleShowSettingUsername={handleShowSettingUsername}
                         />
                     </div>
                 )}
@@ -170,21 +190,21 @@ const LiveSidebar = memo(({userId}) => {
                     </div>
                 )}
                 <Button value={'FetchMore'} onClick={() => {
-                    if (data.getCommentsByLiveID.nextToken){
-                       return fetchMore({
+                    if (data.getCommentsByLiveID.nextToken) {
+                        return fetchMore({
                             variables: {
                                 nextToken: data.getCommentsByLiveID.nextToken
                             },
-                            updateQuery: (previousResult, {fetchMoreResult,variables}) => {
+                            updateQuery: (previousResult, {fetchMoreResult, variables}) => {
                                 console.log("FetchMoreUpdateQuery");
-                                console.log("currentToken",variables.nextToken);
-                                if (!fetchMoreResult || !fetchMoreResult.getCommentsByLiveID || !fetchMoreResult.getCommentsByLiveID.comments.length ===0) return previousResult;
+                                console.log("currentToken", variables.nextToken);
+                                if (!fetchMoreResult || !fetchMoreResult.getCommentsByLiveID || !fetchMoreResult.getCommentsByLiveID.comments.length === 0) return previousResult;
                                 const {comments, nextToken} = fetchMoreResult.getCommentsByLiveID;
-                                console.log("nextToken",nextToken);
+                                console.log("nextToken", nextToken);
                                 const data = Object.assign({}, previousResult, {
-                                    getCommentsByLiveID:{
+                                    getCommentsByLiveID: {
                                         ...previousResult.getCommentsByLiveID,
-                                        comments: [...previousResult.getCommentsByLiveID.comments,...comments],
+                                        comments: [...previousResult.getCommentsByLiveID.comments, ...comments],
                                         nextToken
                                     }
                                 });
@@ -192,7 +212,8 @@ const LiveSidebar = memo(({userId}) => {
                             }
                         })
                     }
-                }}/>
+                }}>FetchMore</Button>
+                {/*<Button onClick={() => lzLoad({variables:{live_episode_id: 16112, limit: 15}})}>Refetch</Button>*/}
             </div>
         </Fragment>
     );

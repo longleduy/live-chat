@@ -1,7 +1,7 @@
 import gql from "graphql-tag";
 
 const GET_COMMENT_BY_POST_ID = gql`
-    query MyQuery($live_episode_id: Int!,$limit: Int = 10,$nextToken: String) {
+    query MyQuery($live_episode_id: Int!,$limit: Int,$nextToken: String) {
         getCommentsByLiveID(live_episode_id: $live_episode_id,limit: $limit,nextToken: $nextToken){
             comments {
                 comment_id
@@ -10,6 +10,7 @@ const GET_COMMENT_BY_POST_ID = gql`
                 block_comment_flg
                 block_comment_badword_flg
                 block_comment_user_flg
+                comment_role
                 content
                 user_info {
                     user_id
@@ -49,6 +50,7 @@ const SUB_CREATE_COMMENT = gql`
           block_comment_flg
           block_comment_badword_flg
           block_comment_user_flg
+          comment_role
           content
           user_info {
               user_id
@@ -58,8 +60,22 @@ const SUB_CREATE_COMMENT = gql`
       }
 }
 `;
+const SUB_ADMIN_ACTION = gql`
+    subscription SubscribeToAdminAction($live_episode_id: Int!){
+         subscribeToAdminAction(live_episode_id: $live_episode_id) {
+           live_episode_id
+           mode
+           comment{
+                 comment_id
+                 create_at
+             }
+           comment_id
+         }
+    }
+`;
 export {
     GET_COMMENT_BY_POST_ID,
     CREATE_COMMENT,
-    SUB_CREATE_COMMENT
+    SUB_CREATE_COMMENT,
+    SUB_ADMIN_ACTION
 }

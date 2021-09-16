@@ -3,7 +3,7 @@ import React, {Fragment} from 'react';
 import {makeStyles} from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import LiveSidebar from "./LiveSidebar";
-import {ApolloProvider, InMemoryCache} from '@apollo/react-hooks';
+import {ApolloProvider, InMemoryCache} from '@apollo/client';
 import {ApolloLink} from 'apollo-link';
 import {createAuthLink} from 'aws-appsync-auth-link';
 import ApolloClient from 'apollo-client';
