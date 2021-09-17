@@ -64,21 +64,36 @@ const LiveSidebar = memo(({userId}) => {
         {
             variables,
             onSubscriptionData: async ({client, subscriptionData}) => {
-                if (subscriptionData.data && subscriptionData.data.subscribeToAdminAction && subscriptionData.data.subscribeToAdminAction.mode === "REFETCH") {
-                    const subDataCommentTime = Number(subscriptionData.data.subscribeToAdminAction.comment.create_at);
-                    const res = client.readQuery({
-                        query: GET_COMMENT_BY_POST_ID,
-                        variables
-                    });
-                    const currentList = res.getCommentsByLiveID.comments;
-                    variables.limit = currentList.length;
-                    let lasteCurrentCommentTime = 0;
-                    if (currentList.length > 0) {
-                        lasteCurrentCommentTime = Number(currentList[currentList.length - 1].create_at)
+                if (subscriptionData.data && subscriptionData.data.subscribeToAdminAction) {
+                    if (subscriptionData.data.subscribeToAdminAction.mode === "REFETCH") {
+                        const subDataCommentTime = Number(subscriptionData.data.subscribeToAdminAction.comment.create_at);
+                        const res = client.readQuery({
+                            query: GET_COMMENT_BY_POST_ID,
+                            variables
+                        });
+                        const currentList = res.getCommentsByLiveID.comments;
+                        variables.limit = currentList.length;
+                        let lasteCurrentCommentTime = 0;
+                        if (currentList.length > 0) {
+                            lasteCurrentCommentTime = Number(currentList[currentList.length - 1].create_at)
+                        }
+                        if (subDataCommentTime >= lasteCurrentCommentTime || lasteCurrentCommentTime === 0) {
+                            console.log("Refetch");
+                            return refetch();
+                        }
                     }
-                    if (subDataCommentTime >= lasteCurrentCommentTime || lasteCurrentCommentTime === 0) {
-                      console.log("Refetch");
-                      return refetch();
+                    else if(subscriptionData.data.subscribeToAdminAction.mode === "PIN_COMMENT"){
+                        console.log("PIN COMMENT NAY", subscriptionData.data.subscribeToAdminAction.comment)
+                    }
+                    else if(subscriptionData.data.subscribeToAdminAction.mode === "UNPIN_COMMENT"){
+                        console.log("BO PIM COMMENT")
+                    }else if(subscriptionData.data.subscribeToAdminAction.mode === "BAN_USER"){
+                        const banUserID = subscriptionData.data.subscribeToAdminAction.user_id;
+                        console.log(`Kiem tra user_id ${banUserID} có phải user của mình (có trong localstorage) thì disable chức năng comment`);
+                    }
+                    else if(subscriptionData.data.subscribeToAdminAction.mode === "UNBAN_USER"){
+                        const banUserID = subscriptionData.data.subscribeToAdminAction.user_id;
+                        console.log(`Kiem tra user_id ${banUserID} có phải user của mình (có trong localstorage) thì enable chức năng comment`);
                     }
                 }
             }
@@ -120,8 +135,7 @@ const LiveSidebar = memo(({userId}) => {
             {
                 "live_episode_id": 16112,
                 "live_program_id": 161,
-                "content": content,
-                "pin_comment_flg": 0
+                "content": content
             },
             {
                 headers: {

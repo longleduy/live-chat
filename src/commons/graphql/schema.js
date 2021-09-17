@@ -38,39 +38,41 @@ const CREATE_COMMENT = gql`
                 user_name
             }
             create_at
-  }
+        }
     }
 `;
 const SUB_CREATE_COMMENT = gql`
     subscription SubscribeToNewComments($live_episode_id: Int!){
-      subscribeToNewComments(live_episode_id: $live_episode_id){
-          comment_id
-          live_episode_id
-          live_program_id
-          block_comment_flg
-          block_comment_badword_flg
-          block_comment_user_flg
-          comment_role
-          content
-          user_info {
-              user_id
-              user_name
-          }
-          create_at
-      }
-}
+        subscribeToNewComments(live_episode_id: $live_episode_id){
+            comment_id
+            live_episode_id
+            live_program_id
+            block_comment_flg
+            block_comment_badword_flg
+            block_comment_user_flg
+            comment_role
+            content
+            user_info {
+                user_id
+                user_name
+            }
+            create_at
+        }
+    }
 `;
 const SUB_ADMIN_ACTION = gql`
     subscription SubscribeToAdminAction($live_episode_id: Int!){
-         subscribeToAdminAction(live_episode_id: $live_episode_id) {
-           live_episode_id
-           mode
-           comment{
-                 comment_id
-                 create_at
-             }
-           comment_id
-         }
+        subscribeToAdminAction(live_episode_id: $live_episode_id) {
+            live_episode_id
+            mode
+            comment{
+                comment_id
+                live_episode_id
+                content
+                create_at
+            }
+            user_id
+        }
     }
 `;
 export {
