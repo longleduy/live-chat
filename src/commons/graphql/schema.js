@@ -7,9 +7,7 @@ const GET_COMMENT_BY_POST_ID = gql`
                 comment_id
                 live_episode_id
                 live_program_id
-                block_comment_flg
-                block_comment_badword_flg
-                block_comment_user_flg
+                comment_status
                 comment_role
                 content
                 user_info {
@@ -29,9 +27,7 @@ const CREATE_COMMENT = gql`
             comment_id
             live_episode_id
             live_program_id
-            block_comment_flg
-            block_comment_badword_flg
-            block_comment_user_flg
+            comment_status
             content
             user_info {
                 user_id
@@ -42,14 +38,12 @@ const CREATE_COMMENT = gql`
     }
 `;
 const SUB_CREATE_COMMENT = gql`
-    subscription SubscribeToNewComments($live_episode_id: Int!){
-        subscribeToNewComments(live_episode_id: $live_episode_id){
+    subscription SubscribeToNewComments($comment_status: String!){
+        subscribeToNewComments(comment_status: $comment_status){
             comment_id
             live_episode_id
             live_program_id
-            block_comment_flg
-            block_comment_badword_flg
-            block_comment_user_flg
+            comment_status
             comment_role
             content
             user_info {
@@ -61,8 +55,8 @@ const SUB_CREATE_COMMENT = gql`
     }
 `;
 const SUB_ADMIN_ACTION = gql`
-    subscription SubscribeToAdminAction($live_episode_id: Int!){
-        subscribeToAdminAction(live_episode_id: $live_episode_id) {
+    subscription SubscribeToAdminAction($live_episode_id: Int!, $push_flg: Int = 1){
+        subscribeToAdminAction(live_episode_id: $live_episode_id, push_flg: $push_flg) {
             live_episode_id
             mode
             comment{
@@ -72,6 +66,7 @@ const SUB_ADMIN_ACTION = gql`
                 create_at
             }
             user_id
+            push_flg
         }
     }
 `;

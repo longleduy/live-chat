@@ -65,7 +65,7 @@ const LiveSidebar = memo(({userId}) => {
             variables,
             onSubscriptionData: async ({client, subscriptionData}) => {
                 if (subscriptionData.data && subscriptionData.data.subscribeToAdminAction) {
-                    if (subscriptionData.data.subscribeToAdminAction.mode === "REFETCH") {
+                    if (["REFETCH","BAN_USER_REFECTH","UNBAN_USER_REFECTH"].includes(subscriptionData.data.subscribeToAdminAction.mode)) {
                         const subDataCommentTime = Number(subscriptionData.data.subscribeToAdminAction.comment.create_at);
                         const res = client.readQuery({
                             query: GET_COMMENT_BY_POST_ID,
@@ -77,23 +77,24 @@ const LiveSidebar = memo(({userId}) => {
                         if (currentList.length > 0) {
                             lasteCurrentCommentTime = Number(currentList[currentList.length - 1].create_at)
                         }
-                        if (subDataCommentTime >= lasteCurrentCommentTime || lasteCurrentCommentTime === 0) {
+                        if (currentList.nextToken === null || subDataCommentTime >= lasteCurrentCommentTime || lasteCurrentCommentTime === 0) {
                             console.log("Refetch");
-                            return refetch();
+                            refetch();
                         }
+                    }
+                    if(["BAN_USER", "BAN_USER_REFECTH"].includes(subscriptionData.data.subscribeToAdminAction.mode)){
+                        const banUserID = subscriptionData.data.subscribeToAdminAction.user_id;
+                        console.log(`Kiem tra user_id ${banUserID} có phải user của mình (có trong localstorage) thì disable chức năng comment`);
+                    }
+                    else if(["UNBAN_USER","UNBAN_USER_REFECTH"].includes(subscriptionData.data.subscribeToAdminAction.mode)){
+                        const banUserID = subscriptionData.data.subscribeToAdminAction.user_id;
+                        console.log(`Kiem tra user_id ${banUserID} có phải user của mình (có trong localstorage) thì enable chức năng comment`);
                     }
                     else if(subscriptionData.data.subscribeToAdminAction.mode === "PIN_COMMENT"){
                         console.log("PIN COMMENT NAY", subscriptionData.data.subscribeToAdminAction.comment)
                     }
                     else if(subscriptionData.data.subscribeToAdminAction.mode === "UNPIN_COMMENT"){
                         console.log("BO PIM COMMENT")
-                    }else if(subscriptionData.data.subscribeToAdminAction.mode === "BAN_USER"){
-                        const banUserID = subscriptionData.data.subscribeToAdminAction.user_id;
-                        console.log(`Kiem tra user_id ${banUserID} có phải user của mình (có trong localstorage) thì disable chức năng comment`);
-                    }
-                    else if(subscriptionData.data.subscribeToAdminAction.mode === "UNBAN_USER"){
-                        const banUserID = subscriptionData.data.subscribeToAdminAction.user_id;
-                        console.log(`Kiem tra user_id ${banUserID} có phải user của mình (có trong localstorage) thì enable chức năng comment`);
                     }
                 }
             }
@@ -157,7 +158,7 @@ const LiveSidebar = memo(({userId}) => {
         console.log("SUB")
         subscribeToMore({
             document: SUB_CREATE_COMMENT,
-            variables: {live_episode_id: 16112},
+            variables: {comment_status: "16112-0-0-0"},
             updateQuery: (prev, {subscriptionData}) => {
                 console.log("updateQuery")
                 if (!subscriptionData.data) return prev;
