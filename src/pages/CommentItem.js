@@ -48,12 +48,25 @@ const CommentItem = memo((props) => {
         "avatar_color": "orange"
     }
     const classes = useStyles();
-
+    const genTitle = () => {
+        const arr = data.comment_status.split("-");
+        let name =  userInfo.user_name;
+        if(arr[3] === "1"){
+            name = `${name} (BAN_USER)`;
+        }
+        else if(arr[2] === "1"){
+            name = `${name} (BAD_WORD)`;
+        }
+        else if(arr[1] === "1"){
+            name = `${name} (BAN_COMMENT)`;
+        }
+        return <div className={classes.username}>{name}</div>
+    }
     return (
         <Fragment>
             <div className={classes.containerComment}>
                 <div className={classes.usernameAndTime}>
-                    <div className={classes.username}>{userInfo.user_name}</div>
+                    {genTitle()}
                     <div className={classes.time}>{convertToTime(data.create_at)}</div>
                 </div>
                 <div className={classes.content}>{data.content}</div>

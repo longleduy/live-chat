@@ -47,7 +47,7 @@ const CommentList = memo((props) => {
     const myRef = useRef(null);
     const scrollButtonRef = useRef(null);
     console.log('CommentList');
-    const comments = [...props.data.getCommentsByLiveID.comments].reverse();
+    const comments = [...props.data.getCommentsByLiveIDAdmin.comments].reverse();
     useEffect(() => {
         if(props.data && comments && comments.length > 0){
             const lastComment = comments[comments.length - 1];

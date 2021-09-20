@@ -1,0 +1,78 @@
+A. ENV
+    BFF_ENDPOINT = https://ncnokoaqk0.execute-api.ap-northeast-1.amazonaws.com/dev
+    GRAPHQL_ENDPOINT = https://u4arnzbmgveazp2hxg5ounqhpm.appsync-api.ap-northeast-1.amazonaws.com/graphql
+    GRAPHQL_API_KEY = da2-ddfsmjpe3fffxnxbergczkgciu
+    ADMIN_TOKEN = ADMIN_REQEST_SECRET_TOKEN
+
+B. BFF_API
+1. ADMIN COMMENT
+    curl --location --request POST 'https://ncnokoaqk0.execute-api.ap-northeast-1.amazonaws.com/dev/chat/comment' \
+    --header 'Content-Type: application/json' \
+    --header 'admin-token: ADMIN_REQEST_SECRET_TOKEN' \
+    --data-raw '{
+    	"live_episode_id": 16112,
+    	"live_program_id": 161,
+    	"content": "ADMIN COMMENT 1"
+    }'
+
+2. ADMIN BAN/UNBAN COMMENT
+    curl --location --request POST 'https://ncnokoaqk0.execute-api.ap-northeast-1.amazonaws.com/dev/chat/admin/action' \
+    --header 'Content-Type: application/json' \
+    --header 'admin-token: ADMIN_REQEST_SECRET_TOKEN' \
+    --data-raw '{
+    	"action": "BAN_COMMENT",
+    	"live_episode_id": 16112,
+        "comment_id": 1632120890495
+    }
+    // {
+    // 	"action": "UNBAN_COMMENT",
+    // 	"live_episode_id": 16112,
+    //     "comment_id": 1632120890495
+    // }'
+3. ADMIN GET LIST BAN COMMENT (thiếu)
+
+4. ADMIN BAN/UNBAN USER
+    curl --location --request POST 'https://ncnokoaqk0.execute-api.ap-northeast-1.amazonaws.com/dev/chat/admin/action' \
+    --header 'Content-Type: application/json' \
+    --header 'admin-token: ADMIN_REQEST_SECRET_TOKEN' \
+    --data-raw '{
+    	"live_episode_id": 16112,
+    	"action": "BAN_USER",
+    	"user_id": "836f4c6c-ef3f-4f5f-b32b-90b605f3bac7"
+    }
+    // {
+    // 	"live_episode_id": 16112,
+    // 	"action": "UNBAN_USER",
+    // 	"user_id": "836f4c6c-ef3f-4f5f-b32b-90b605f3bac7"
+    // }'
+5. GET LIST BAN USER
+    curl --location --request GET 'https://ncnokoaqk0.execute-api.ap-northeast-1.amazonaws.com/dev/chat/admin/ban_user?live_episode_id=16112' \
+    --header 'admin-token: ADMIN_REQEST_SECRET_TOKEN'
+6. ADMIN UPDATE BAD_WORD (Truyền tất cả list bên admin cho em)
+    curl --location --request POST 'https://ncnokoaqk0.execute-api.ap-northeast-1.amazonaws.com/dev/chat/admin/action' \
+    --header 'Content-Type: application/json' \
+    --header 'admin-token: ADMIN_REQEST_SECRET_TOKEN' \
+    --data-raw '{
+    	"action": "UPDATE_BADWORD",
+    	"bad_word": ["long","9"],
+        "live_episode_id": 16112
+    }'
+7. ADMIN GET LIST BAD_WORD
+    curl --location --request GET 'https://ncnokoaqk0.execute-api.ap-northeast-1.amazonaws.com/dev/chat/admin/bad_word' \
+    --header 'admin-token: ADMIN_REQEST_SECRET_TOKEN'
+8. ADMIN PIN/UNPIN COMMENT
+    curl --location --request POST 'https://ncnokoaqk0.execute-api.ap-northeast-1.amazonaws.com/dev/chat/admin/action' \
+    --header 'Content-Type: application/json' \
+    --header 'admin-token: ADMIN_REQEST_SECRET_TOKEN' \
+    --data-raw '{
+    	"live_episode_id": 16112,
+    	"action": "PIN_COMMENT",
+    	"comment_id": 1631908043955
+    }
+    // {
+    // 	"live_episode_id": 16112,
+    // 	"action": "UNPIN_COMMENT",
+    // 	"comment_id": 1631908043955
+    // }'
+C. GRAPHQL_SCHEMA
+1. GET ALL COMMENT BY LIVE_EPISODE_ID

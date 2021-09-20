@@ -50,13 +50,14 @@ const useStyles = makeStyles((theme) => ({
         backgroundColor: theme.customColor?.WHITE,
     },
 }));
+const live_episode_id = 16112;
+const live_program_id = 161;
 const LiveSidebar = memo(({userId}) => {
     console.log('LiveSidebar');
     const variables = {
-        live_episode_id: 16112,
-        limit: 10
+        live_episode_id: live_episode_id
     }
-    const {loading, refetch, data, subscribeToMore, fetchMore, networkStatus} = useQuery(GET_COMMENT_BY_POST_ID, {
+    const {refetch, data, subscribeToMore, networkStatus} = useQuery(GET_COMMENT_BY_POST_ID, {
         variables
     });
     useSubscription(
@@ -71,7 +72,7 @@ const LiveSidebar = memo(({userId}) => {
                             query: GET_COMMENT_BY_POST_ID,
                             variables
                         });
-                        const currentList = res.getCommentsByLiveID.comments;
+                        const currentList = res.getCommentsByLiveIDAdmin.comments;
                         variables.limit = currentList.length;
                         let lasteCurrentCommentTime = 0;
                         if (currentList.length > 0) {
@@ -134,13 +135,13 @@ const LiveSidebar = memo(({userId}) => {
         await axios.post(
             'http://localhost:8081/chat/comment',
             {
-                "live_episode_id": 16112,
-                "live_program_id": 161,
+                "live_episode_id": live_episode_id,
+                "live_program_id": live_program_id,
                 "content": content
             },
             {
                 headers: {
-                    'user-token': '500a5a01-0d42-49fb-8197-2a788a4d585d'
+                    'admin-token': 'ADMIN_REQEST_SECRET_TOKEN'
                 }
             }
         )
@@ -158,27 +159,24 @@ const LiveSidebar = memo(({userId}) => {
         console.log("SUB")
         subscribeToMore({
             document: SUB_CREATE_COMMENT,
-            variables: {comment_status: "16112-0-0-0"},
+            variables: {live_episode_id: live_episode_id},
             updateQuery: (prev, {subscriptionData}) => {
                 console.log("updateQuery")
                 if (!subscriptionData.data) return prev;
-                const subscribeToNewComments = subscriptionData.data.subscribeToNewComments;
+                const subscribeToNewCommentsAdmin = subscriptionData.data.subscribeToNewCommentsAdmin;
                 const data = Object.assign({}, prev, {
-                    getCommentsByLiveID: {
-                        ...prev.getCommentsByLiveID,
-                        comments: [subscribeToNewComments, ...prev.getCommentsByLiveID.comments]
+                    getCommentsByLiveIDAdmin: {
+                        ...prev.getCommentsByLiveIDAdmin,
+                        comments: [subscribeToNewCommentsAdmin, ...prev.getCommentsByLiveIDAdmin.comments]
                     }
                 });
                 return data;
             }
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
-    //if(!called) return <Button onClick={() => lzLoad({variables:{live_episode_id: 16112}})}>Refetch</Button>
     return (
         <Fragment>
             <div className={classes.containerSidebar}>
-                {/*<Subcription refetch={...refetch()}/>*/}
                 <div className={classes.title}>チャット</div>
                 {!isShowSettingUsername && (
                     <div className={classes.contentComment}>
@@ -204,31 +202,6 @@ const LiveSidebar = memo(({userId}) => {
                         />
                     </div>
                 )}
-                <Button value={'FetchMore'} onClick={() => {
-                    if (data.getCommentsByLiveID.nextToken) {
-                        return fetchMore({
-                            variables: {
-                                nextToken: data.getCommentsByLiveID.nextToken
-                            },
-                            updateQuery: (previousResult, {fetchMoreResult, variables}) => {
-                                console.log("FetchMoreUpdateQuery");
-                                console.log("currentToken", variables.nextToken);
-                                if (!fetchMoreResult || !fetchMoreResult.getCommentsByLiveID || !fetchMoreResult.getCommentsByLiveID.comments.length === 0) return previousResult;
-                                const {comments, nextToken} = fetchMoreResult.getCommentsByLiveID;
-                                console.log("nextToken", nextToken);
-                                const data = Object.assign({}, previousResult, {
-                                    getCommentsByLiveID: {
-                                        ...previousResult.getCommentsByLiveID,
-                                        comments: [...previousResult.getCommentsByLiveID.comments, ...comments],
-                                        nextToken
-                                    }
-                                });
-                                return data;
-                            }
-                        })
-                    }
-                }}>FetchMore</Button>
-                {/*<Button onClick={() => lzLoad({variables:{live_episode_id: 16112, limit: 15}})}>Refetch</Button>*/}
             </div>
         </Fragment>
     );
