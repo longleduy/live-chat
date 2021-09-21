@@ -9,6 +9,7 @@ const GET_COMMENT_BY_POST_ID = gql`
                 live_program_id
                 comment_status
                 comment_role
+                pin_flg
                 content
                 user_info {
                     user_id
@@ -29,6 +30,7 @@ const SUB_CREATE_COMMENT = gql`
             live_program_id
             comment_status
             comment_role
+            pin_flg
             content
             user_info {
                 user_id
